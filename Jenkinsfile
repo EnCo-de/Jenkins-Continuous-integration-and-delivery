@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS-7.8.0"
+        nodejs 'NodeJS-7.8.0' // Make sure this NodeJS version is configured in Jenkins
     }
 
     environment {
@@ -30,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Set Environment') {
+        stage('Set Branch Environment') {
             steps {
                 script {
                     if (env.BRANCH_NAME == "main") {
@@ -40,35 +40,37 @@ pipeline {
                         IMAGE_NAME = "nodedev:v1.0"
                         PORT = "3001"
                     }
+                    echo "Branch: ${env.BRANCH_NAME}, Image: ${IMAGE_NAME}, Port: ${PORT}"
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
-        stage('Stop Old Container') {
-            steps {
-                sh '''
-                docker stop nodeapp || true
-                docker rm nodeapp || true
-                '''
-            }
-        }
-
-        stage('Deploy') {
-            steps {
                 script {
-                    if (env.BRANCH_NAME == "main") {
-                        sh "docker run -d --name nodeapp --expose 3000 -p 3000:3000 nodemain:v1.0"
-                    } else {
-                        sh "docker run -d --name nodeapp --expose 3001 -p 3001:3000 nodedev:v1.0"
-                    }
+                    echo "Building Docker image ${IMAGE_NAME}"
+                    docker.build(IMAGE_NAME)
                 }
             }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                script {
+                    echo "Deploying container ${IMAGE_NAME} on port ${PORT}"
+
+                    // Use Docker Pipeline plugin to run container detached
+                    docker.image(IMAGE_NAME).run("-d -p ${PORT}:3000 --name nodeapp-${env.BRANCH_NAME}")
+
+                    echo "Container ${IMAGE_NAME} is running at http://localhost:${PORT}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline for branch ${env.BRANCH_NAME} finished."
         }
     }
 }
