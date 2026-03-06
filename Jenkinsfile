@@ -49,6 +49,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image ${IMAGE_NAME}"
+                    export PATH=$HOME/bin/docker:$PATH
                     docker.build(IMAGE_NAME)
                 }
             }
@@ -58,6 +59,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying container ${IMAGE_NAME} on port ${PORT}"
+                    export PATH=$HOME/bin/docker:$PATH
 
                     // Use Docker Pipeline plugin to run container detached
                     docker.image(IMAGE_NAME).run("-d -p ${PORT}:3000 --name nodeapp-${env.BRANCH_NAME}")
