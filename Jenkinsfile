@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "node-7.8.0"
+        nodejs "node-25.8.0"
     }
 
     environment {
