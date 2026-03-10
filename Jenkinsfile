@@ -1,18 +1,28 @@
 pipeline {
+
     agent any
 
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
     tools {
-        nodejs "node-25.8.0"
+        nodejs "node-7.8.0"
     }
 
     environment {
         IMAGE_NAME = ""
         PORT = ""
+        CONTAINER_NAME = "nodeapp"
     }
 
     stages {
 
         stage('Checkout') {
+             options {
+                timeout(time: 2, unit: 'MINUTES')
+            }
             steps {
                 git credentialsId: 'github-ssh', url: 'git@github.com:EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
             }
@@ -22,27 +32,32 @@ pipeline {
             steps {
                 script {
 
-                    if (env.BRANCH_NAME == "main") {
-                        IMAGE_NAME = "nodemain:v1.0"
-                        PORT = "3000"
-                    }
+                    switch(env.BRANCH_NAME) {
 
-                    if (env.BRANCH_NAME == "dev") {
-                        IMAGE_NAME = "nodedev:v1.0"
-                        PORT = "3001"
-                    }
+                        case "main":
+                            IMAGE_NAME = "nodemain:v1.0"
+                            PORT = "3000"
+                            break
 
+                        case "dev":
+                            IMAGE_NAME = "nodedev:v1.0"
+                            PORT = "3001"
+                            break
+
+                        default:
+                            error("Unsupported branch: ${env.BRANCH_NAME}")
+                    }
                 }
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 sh 'npm test'
             }
@@ -56,37 +71,31 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                script {
+                sh """
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
 
-                    sh '''
-                    docker stop nodeapp || true
-                    docker rm nodeapp || true
-                    '''
-
-                    if (env.BRANCH_NAME == "main") {
-
-                        sh '''
-                        docker run -d \
-                        --name nodeapp \
-                        -p 3000:3000 \
-                        nodemain:v1.0
-                        '''
-
-                    }
-
-                    if (env.BRANCH_NAME == "dev") {
-
-                        sh '''
-                        docker run -d \
-                        --name nodeapp \
-                        -p 3001:3000 \
-                        nodedev:v1.0
-                        '''
-
-                    }
-
-                }
+                docker run -d \
+                --name ${CONTAINER_NAME} \
+                -p ${PORT}:3000 \
+                ${IMAGE_NAME}
+                """
             }
+        }
+    }
+
+    post {
+
+        success {
+            echo "Deployment successful 🚀"
+        }
+
+        failure {
+            echo "Pipeline failed ❌"
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
