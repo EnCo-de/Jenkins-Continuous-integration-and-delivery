@@ -2,11 +2,6 @@ pipeline {
 
     agent any
 
-    options {
-        timeout(time: 60, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-    }
-
     tools {
         nodejs "node-25.8.0"
         dockerTool "docker"
@@ -95,7 +90,7 @@ pipeline {
     post {
 
         success {
-            echo "Deployment successful 🚀"
+            echo "Deployment of ${env.BRANCH_NAME} branch is successful 🚀"
         }
 
         failure {
