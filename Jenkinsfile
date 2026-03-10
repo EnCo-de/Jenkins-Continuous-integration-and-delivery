@@ -15,16 +15,7 @@ pipeline {
 
     stages {
 
-        stage('Check Docker') {
-            steps {
-                sh 'docker --version'
-            }
-        }
-
         stage('Checkout') {
-             options {
-                timeout(time: 2, unit: 'MINUTES')
-            }
             steps {
                 git branch: "${env.BRANCH_NAME}",
                     url: 'https://github.com/EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
@@ -75,11 +66,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
+                docker stop "${CONTAINER_NAME}-${env.BRANCH_NAME}" || true
+                docker rm "${CONTAINER_NAME}-${env.BRANCH_NAME}" || true
 
                 docker run -d \
-                --name ${CONTAINER_NAME} \
+                --name "${CONTAINER_NAME}-${env.BRANCH_NAME}" \
                 -p ${PORT}:3000 \
                 ${IMAGE_NAME}
                 """
