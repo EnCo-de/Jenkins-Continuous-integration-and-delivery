@@ -24,7 +24,8 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                git url: 'https://github.com/EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
+                git branch: "${env.BRANCH_NAME}",
+                    url: 'https://github.com/EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
             }
         }
 
