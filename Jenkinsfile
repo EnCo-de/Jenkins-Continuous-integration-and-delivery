@@ -24,7 +24,7 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                git credentialsId: 'github-ssh', url: 'git@github.com:EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
+                git url: 'https://github.com/EnCo-de/Jenkins-Continuous-integration-and-delivery.git'
             }
         }
 
