@@ -8,7 +8,8 @@ pipeline {
     }
 
     tools {
-        nodejs "node-25.8.0"
+        nodejs "node-25.8.0",
+            docker "dckr"
     }
 
     environment {
@@ -18,6 +19,12 @@ pipeline {
     }
 
     stages {
+
+        stage('Check Docker') {
+            steps {
+                sh 'docker --version'
+            }
+        }
 
         stage('Checkout') {
              options {
