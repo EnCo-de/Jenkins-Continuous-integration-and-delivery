@@ -9,7 +9,7 @@ pipeline {
 
     tools {
         nodejs "node-25.8.0"
-        dockerTool "dckr"
+        dockerTool "docker"
     }
 
     environment {
